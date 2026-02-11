@@ -10,7 +10,40 @@ class CounterView extends StatefulWidget {
 
 
 class _CounterViewState extends State<CounterView> {
-  
+
+  void _showResetDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Konfirmasi Reset"),
+          content: const Text("Apakah kamu yakin ingin menghapus semua hitungan dan riwayat?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), 
+              child: const Text("Batal"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () {
+                setState(() {
+                  _controller.reset();
+                  _stepInputController.text = "1";
+                });
+                Navigator.pop(context); 
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Data berhasil di-reset!")),
+                );
+              },
+              child: const Text("Ya, Reset", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   final CounterController _controller = CounterController();
 
   final TextEditingController _stepInputController = TextEditingController(text: "1");
@@ -55,7 +88,6 @@ class _CounterViewState extends State<CounterView> {
             
               const SizedBox(height: 20),
             
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -67,12 +99,10 @@ class _CounterViewState extends State<CounterView> {
                   const SizedBox(width: 10),
                   FloatingActionButton(
                     heroTag: "btn_res",
-                    onPressed: (){
-                      setState(() => _controller.reset());
-                       _stepInputController.text = "1";
-                    },
+                    onPressed: _showResetDialog,
                     child: const Icon(Icons.refresh),
                   ),
+
                   const SizedBox(width: 10),
                   FloatingActionButton(
                     heroTag: "btn_inc",
@@ -85,17 +115,41 @@ class _CounterViewState extends State<CounterView> {
 
                   const Divider(),
                   const Text("Riwayat 5 Aktivitas Terakhir:", style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),//
+                  const SizedBox(height: 20),//
 
               SizedBox(
-                height: 150, 
+                height: 300, 
                 child: ListView.builder(
                   shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const BouncingScrollPhysics(),
                   itemCount: _controller.history.length,
 
                   itemBuilder: (context, index) {
-                    return Card(child: Text(_controller.history[index]));
+                    String log = _controller.history[index];
+                    Color itemColor = Colors.grey;
+
+                    if (log.contains("menambah")) {
+                      itemColor = Colors.green;
+                    } else if (log.contains("mengurangi")) {
+                      itemColor = Colors.red;
+                    } else if (log.contains("Reset")) {
+                      itemColor = Colors.blue;
+                    }
+
+                    return Card(
+                      child: ListTile(
+                        leading: Icon(
+                          log.contains("menambah") 
+                              ? Icons.add_circle 
+                              : (log.contains("mengurangi") ? Icons.remove_circle : Icons.refresh),
+                          color: itemColor, 
+                        ), 
+                        title: Text( 
+                          log, 
+                          style: TextStyle(color: itemColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
