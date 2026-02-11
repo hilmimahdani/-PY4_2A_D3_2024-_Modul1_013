@@ -26,18 +26,18 @@ class CounterController {
 
   void increment() {
     _counter += _step;
-    _addToHistory("User menambah nilai sebesar $_step");
+    _addToHistory("Anda menambah nilai sebesar $_step");
   } 
 
   void decrement() { 
     _counter -= _step;
-    _addToHistory("User mengurangi nilai sebesar $_step");
+    _addToHistory("Anda mengurangi nilai sebesar $_step");
   }
 
   void reset() {
     _counter = 0;
     _step = 1;
-    _addToHistory("User melakukan Reset");
+    _addToHistory("Anda melakukan reset");
   }
 
 }

@@ -17,7 +17,7 @@ class _CounterViewState extends State<CounterView> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Konfirmasi Reset"),
-          content: const Text("Apakah kamu yakin ingin menghapus semua hitungan dan riwayat?"),
+          content: const Text("Apakah Anda yakin ingin menghapus semua hitungan dan riwayat?"),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context), 
@@ -61,10 +61,10 @@ class _CounterViewState extends State<CounterView> {
             children: [
               const Text ("Total Hitungan:"),
               Text('${_controller.value}',
-                style: const TextStyle(fontSize: 60, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
               ),
             
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
             
               SizedBox(
                 width: 200,
@@ -74,7 +74,6 @@ class _CounterViewState extends State<CounterView> {
                     decoration: const InputDecoration(
                       labelText: "Besar Step",
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.bolt),
                     ),  
                     onChanged: (value) {
                     
@@ -86,7 +85,7 @@ class _CounterViewState extends State<CounterView> {
                   ),
               ),
             
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
             
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -111,11 +110,11 @@ class _CounterViewState extends State<CounterView> {
                   ),
                 ],
               ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 25),
 
                   const Divider(),
                   const Text("Riwayat 5 Aktivitas Terakhir:", style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),//
+                  const SizedBox(height: 15),
 
               SizedBox(
                 height: 300, 
@@ -132,7 +131,7 @@ class _CounterViewState extends State<CounterView> {
                       itemColor = Colors.green;
                     } else if (log.contains("mengurangi")) {
                       itemColor = Colors.red;
-                    } else if (log.contains("Reset")) {
+                    } else if (log.contains("reset")) {
                       itemColor = Colors.blue;
                     }
 
@@ -146,7 +145,7 @@ class _CounterViewState extends State<CounterView> {
                         ), 
                         title: Text( 
                           log, 
-                          style: TextStyle(color: itemColor, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: itemColor, fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),
                     );
