@@ -52,7 +52,7 @@ class _CounterViewState extends State<CounterView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Logbook: Counter")),
+      appBar: AppBar(title: const Text("Logbook: SRP Version")),
       body: SingleChildScrollView(
         child: Padding(
         padding : const EdgeInsets.all(20.0),
