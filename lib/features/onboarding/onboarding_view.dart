@@ -12,6 +12,24 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView> {
   int step = 1;
 
+  final List<Map<String, String>> _onboardingData = [
+    {
+      "image": "assets/images/onboarding1.png", 
+      "title": "Catat Aktivitas",
+      "desc": "Selamat datang di aplikasi Logbook. Kelola catatanmu dengan mudah.",
+    },
+    {
+      "image": "assets/images/onboarding2.png",
+      "title": "Pantau Progress",
+      "desc": "Pantau semua aktivitas harianmu dalam satu genggaman.",
+    },
+    {
+      "image": "assets/images/onboarding3.png",
+      "title": "Mulai Sekarang",
+      "desc": "Siap untuk memulai? Klik tombol di bawah untuk login.",
+    },
+  ];
+
   void _nextStep() {
     setState(() {
       if (step < 3) {
@@ -27,59 +45,82 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   @override
   Widget build(BuildContext context) {
+    final currentData = _onboardingData[step - 1];
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Welcome")),
-      body: Center(
+     
+      body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              
-              CircleAvatar(
-                radius: 50,
-                child: Text("$step", style: const TextStyle(fontSize: 40)),
+              const Spacer(),
+
+              Expanded(
+                flex: 5,
+                child: Image.asset(
+                  currentData["image"]!,
+
+                  width: double.infinity, 
+                  // Mengatur agar gambar menyesuaikan ruang tanpa terpotong
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace){
+                    return const Icon(Icons.image_not_supported, size: 100, color: Colors.grey);
+                  },
+                ),
               ),
-              const SizedBox(height: 24),
-              
+
+              const SizedBox(height: 20),
+
               Text(
-                "Langkah Ke-$step",
+                currentData["title"]!,
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               Text(
-                _getStepDescription(step),
+                currentData["desc"]!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
+              const Spacer(),
+
               
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (index) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: step == (index + 1) ? 24 : 12, 
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: step == (index + 1) ? Colors.blue : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  );
+                }),
+              ),
+
               const SizedBox(height: 40),
+
               
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _nextStep,
-                  child: Text(step < 3 ? "Next" : "Get Started"),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(step < 3 ? "Lanjut" : "Mulai"),
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _getStepDescription(int step) {
-    switch (step) {
-      case 1:
-        return "Selamat datang di aplikasi Logbook.";
-      case 2:
-        return "Klik Next untuk selanjutnya";
-      case 3:
-        return "Klik Next untuk selanjutnya.";
-      default:
-        return "";
-    }
   }
 }

@@ -16,10 +16,10 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
 
-  bool _isObscure = true; //buat hide/show password
-  int _failedAttempts = 0; //hitung berapa kali gagal login
-  bool _isLocked = false; //status kekunci atau ennga
-  int _countdown = 0; //hitung mundur
+  bool _isObscure = true; 
+  int _failedAttempts = 0; 
+  bool _isLocked = false; 
+  int _countdown = 0; 
   Timer? _timer; 
 
   void _handleLogin() {
@@ -52,7 +52,7 @@ class _LoginViewState extends State<LoginView> {
         _startLockdown();
         _showSnackBar("Login Gagal! Tunggu 10 detik.", Colors.red);
       } else {
-        _showSnackBar("Login Gagal! Sisa percobaan ${3 - _failedAttempts}", Colors.red);
+        _showSnackBar("Login Gagal! Sisa ${3 - _failedAttempts} kali percobaan", Colors.red);
       }
     }
   }
@@ -87,7 +87,7 @@ class _LoginViewState extends State<LoginView> {
       SnackBar(
         content: Text(message),
         backgroundColor: color,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -103,7 +103,7 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login Gatekeeper")),
+      appBar: AppBar(title: const Text("Login Logbook App")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -119,7 +119,7 @@ class _LoginViewState extends State<LoginView> {
 
             TextField(
               controller: _passController,
-              obscureText: _isObscure, // hide teks password
+              obscureText: _isObscure, 
               decoration: InputDecoration(
                 labelText: "Password",
                 prefixIcon: const Icon(Icons.lock),

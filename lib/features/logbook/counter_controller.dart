@@ -46,13 +46,13 @@ class CounterController {
 
   Future<void> increment(String username) async {
     _counter += _step;
-    _addToHistory("menambah +$_step", username);
+    _addToHistory("menambah $_step", username);
     await _saveData(username);
   } 
 
   Future<void> decrement(String username) async { 
     _counter -= _step;
-    _addToHistory("mengurangi -$_step", username);
+    _addToHistory("mengurangi $_step", username);
     await _saveData(username);
   }
 
