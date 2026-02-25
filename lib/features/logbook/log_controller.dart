@@ -5,6 +5,8 @@ import 'package:logbook_app_001/features/logbook/models/log_model.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
+  final ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
+
   final String username;
   
   String get _storageKey => 'user_logs_data_$username';
@@ -13,16 +15,33 @@ class LogController {
     loadFromDisk();
   }
 
-  void addLog(String title, String desc) {
-    final newLog = LogModel(title: title, description: desc, date: DateTime.now().toString());
+  void addLog(String title, String desc, String category) {
+    final newLog = LogModel(title: title, description: desc, category: category, date: DateTime.now().toString());
     logsNotifier.value = [...logsNotifier.value, newLog];
+    _syncFiltered();
     saveToDisk();
   }
 
-  void updateLog(int index, String title, String desc) {
+  void searchLog(String query) {
+    if (query.isEmpty) {
+      filteredLogs.value = logsNotifier.value;
+    } else {
+      filteredLogs.value = logsNotifier.value
+          .where((log) => log.title.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
+  }
+
+
+  void _syncFiltered() {
+    filteredLogs.value = logsNotifier.value;
+  }
+
+  void updateLog(int index, String title, String desc, String category) {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
-    currentLogs[index] = LogModel(title: title, description: desc, date: DateTime.now().toString());
+    currentLogs[index] = LogModel(title: title, description: desc, category: category, date: DateTime.now().toString());
     logsNotifier.value = currentLogs;
+    _syncFiltered();
     saveToDisk();
   }
 
@@ -30,6 +49,7 @@ class LogController {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs.removeAt(index);
     logsNotifier.value = currentLogs;
+    _syncFiltered();
     saveToDisk();
   }
 
@@ -48,5 +68,6 @@ class LogController {
     }else{
       logsNotifier.value = [];
     }
+    _syncFiltered();
   }
 }

@@ -104,56 +104,67 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Login Logbook App")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _userController,
-              decoration: const InputDecoration(
-                labelText: "Username",
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            TextField(
-              controller: _passController,
-              obscureText: _isObscure, 
-              decoration: InputDecoration(
-                labelText: "Password",
-                prefixIcon: const Icon(Icons.lock),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isObscure ? Icons.visibility : Icons.visibility_off,
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/login.png', height: 280),
+                const SizedBox(height: 30),
+                TextField(
+                  controller: _userController,
+                  decoration: const InputDecoration(
+                    labelText: "Username",
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder()
                   ),
-                  onPressed: (){
-                    setState(() {
-                      _isObscure = !_isObscure; 
-                    });
-                  },
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
+                const SizedBox(height: 15),
+
+                TextField(
+                  controller: _passController,
+                  obscureText: _isObscure, 
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscure ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: (){
+                        setState(() {
+                          _isObscure = !_isObscure; 
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 25),
             
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                
-                onPressed: _isLocked ? null : _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isLocked ? Colors.grey : Colors.blue,
-                  foregroundColor: Colors.white,
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isLocked ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isLocked ? Colors.grey : Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      _isLocked ? "Tunggu $_countdown detik..." : "Masuk",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
-                child: Text(
-                  _isLocked ? "Tunggu $_countdown detik..." : "Masuk",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

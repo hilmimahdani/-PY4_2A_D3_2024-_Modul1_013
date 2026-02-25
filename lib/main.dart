@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
     
-        colorScheme: .fromSeed(seedColor: Colors.indigo),
+        colorScheme: .fromSeed(seedColor: Colors.lightBlueAccent),
       ),
       home: const OnboardingView(),
     );
