@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:logbook_app_001/features/logbook/log_controller.dart';
 import 'package:logbook_app_001/features/logbook/models/log_model.dart';
 import 'package:logbook_app_001/features/onboarding/onboarding_view.dart'; 
+import 'package:logbook_app_001/services/mongo_services.dart';
+import 'package:logbook_app_001/helpers/log_helper.dart';
 
 
 class LogView extends StatefulWidget {
@@ -17,19 +19,87 @@ class _LogViewState extends State<LogView> {
   String _selectedCategory = "Umum";
   final List<String> _categories = ["Umum", "Pekerjaan", "Urgent", "Pribadi"];
   
+  bool _isLoading = false;
 
   late LogController _controller;
+
+  Future<List<LogModel>>? _logsFuture;
+
+   Future<List<LogModel>> _fetchLogs() async {
+    return await MongoService().getLogsByUser(widget.username ?? "default_user");
+  }
 
   @override
   void initState() {
     super.initState();
     _controller = LogController(widget.username ?? "default_user"); 
+
+    // Memberikan kesempatan UI merender widget awal sebelum proses berat dimulai
+    Future.microtask(() => _initDatabase());
   } 
+
+  Future<void> _initDatabase() async {
+    setState(() => _isLoading = true);
+    try {
+      await LogHelper.writeLog(
+        "UI: Memulai inisialisasi database...",
+        source: "log_view.dart",
+      );
+
+      //mencoba koneksi ke MongoDB Atlas (Cloud)
+      await LogHelper.writeLog(
+        "UI: Menghubungi MongoService.connect()...",
+        source: "log_view.dart",
+      );
+
+      // Mengaktifkan kembali koneksi dengan timeout 15 detik
+      await MongoService().connect().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw Exception(
+          "Koneksi Cloud Timeout. Periksa sinyal/IP Whitelist.",
+        ),
+      );
+
+      await LogHelper.writeLog(
+        "UI: Koneksi MongoService BERHASIL.",
+        source: "log_view.dart",
+      );
+
+      // Mengambil data log dari Cloud
+      await LogHelper.writeLog(
+        "UI: Memanggil controller.loadFromDisk() dan fetch Future...",
+        source: "log_view.dart",
+      );
+
+      await _controller.loadFromDisk();
+      
+      if (mounted) {
+        setState(() {
+          _logsFuture = _fetchLogs();
+        });
+      }
+  } catch (e) {
+    await LogHelper.writeLog(
+        "UI: Error - $e",
+        source: "log_view.dart",
+        level: 1,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Masalah: $e"), backgroundColor: Colors.red),
+        );
+      }
+  } finally {
+    
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
 
-  
   void _showAddLogDialog() {
     _titleController.clear();
     _contentController.clear();
@@ -81,18 +151,28 @@ class _LogViewState extends State<LogView> {
                   child: const Text("Batal"),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    _controller.addLog(
+                  onPressed: () async {
+                    await _controller.addLog(
                       _titleController.text,
                       _contentController.text,
                       _selectedCategory,
                     );
+
+                    if (mounted) {
+                      setState(() {
+                        _logsFuture = _fetchLogs();
+                      });
+                    }
+
+                    if(!context.mounted) return; 
+
                     _titleController.clear();
                     _contentController.clear();
                     Navigator.pop(context);
-                    
-                    
-                    setState(() {}); 
+
+                    if (mounted) {
+                      setState(() {}); 
+                    }
                   },
                   child: const Text("Simpan"),
                 ),
@@ -108,7 +188,6 @@ class _LogViewState extends State<LogView> {
     _titleController.text = log.title;
     _contentController.text = log.description;
     
-  
     if (_categories.contains(log.category)) {
       _selectedCategory = log.category;
     } else {
@@ -134,7 +213,6 @@ class _LogViewState extends State<LogView> {
                     decoration: const InputDecoration(labelText: "Deskripsi"),
                   ),
 
-              
                   DropdownButton<String>(
                     value: _selectedCategory,
                     isExpanded: true,
@@ -160,19 +238,29 @@ class _LogViewState extends State<LogView> {
                   child: const Text("Batal"),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    _controller.updateLog(
+                  onPressed: () async {
+                    await _controller.updateLog(
                       index,
                       _titleController.text,
                       _contentController.text,
                       _selectedCategory,
                     );
-                    _titleController.clear();
-                    _contentController.clear();
-                    Navigator.pop(context);
-                    
-                    
-                    setState(() {}); 
+
+                    if (mounted) {
+                      setState(() {
+                        _logsFuture = _fetchLogs();
+                      });
+                    }
+
+                    if (!context.mounted) return;
+
+                      _titleController.clear();
+                      _contentController.clear();
+                      Navigator.pop(context);
+
+                      if (mounted) {
+                        setState(() {}); 
+                      }
                   },
                   child: const Text("Update"),
                 ),
@@ -183,8 +271,6 @@ class _LogViewState extends State<LogView> {
       },
     );
   }
-  
-  
   
   void _handleLogout() {
     showDialog(
@@ -234,22 +320,20 @@ class _LogViewState extends State<LogView> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Log Notes - ${widget.username ?? 'User'}"),
-        backgroundColor: Colors.blue.shade300,
-          actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
-          )
-        ]
-      ),
-  
-      body: Column(
-        children: [
-        
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text("Log Notes - ${widget.username ?? 'User'}"),
+      backgroundColor: Colors.blue.shade300,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout),
+          onPressed: _handleLogout,
+        )
+      ]
+    ),
+    body: Column(
+      children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
@@ -261,97 +345,132 @@ class _LogViewState extends State<LogView> {
             ),
           ),
         ),
-          Expanded(
-            child: ValueListenableBuilder<List<LogModel>>(
-              valueListenable: _controller.filteredLogs, 
-              builder: (context, currentLogs, child) {
-                
-                if (currentLogs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('assets/images/emptyfolder.png', height: 300),
-                        const Text("Belum ada catatan."),
-                      ],
-                    ),
-                  );
-                }
+        Expanded(
+          child: FutureBuilder<List<LogModel>>(
+            future: _logsFuture,
+            builder: (context, snapshot) {
+              if (_isLoading || snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text("Menghubungkan ke MongoDB Atlas..."),
+                    ],
+                  ),
+                );
+              }
 
-                return ListView.separated(
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              final currentLogs = snapshot.data ?? [];
+
+              if (_controller.logs != currentLogs) {
+                _controller.logsNotifier.value = currentLogs;
+                _controller.filteredLogs.value = currentLogs;
+              }
+
+              if (currentLogs.isEmpty) {
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    if (mounted) {
+                      setState(() {
+                        _logsFuture = _fetchLogs();
+                      });
+                    } 
+                    await _logsFuture;
+                  },
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                      const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+                      const Center(child: Text("Belum ada catatan di Cloud.")),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 50),
+                        child: ElevatedButton(
+                          onPressed: _showAddLogDialog,
+                          child: const Text("Buat Catatan Pertama"),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  if (mounted) {
+                    setState(() {
+                      _logsFuture = _fetchLogs();
+                    });
+                  }
+                  await _logsFuture;
+                },
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(8),
                   itemCount: currentLogs.length,
-                  separatorBuilder: (context, index) => const SizedBox (height: 8),
+                  separatorBuilder: (context, index) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
-
                     final log = currentLogs[index];
-                    
-                    
                     return Dismissible(
-                    
-                      key: Key('${log.title}_$index'), 
-                      direction: DismissDirection.endToStart, 
-                      
+                      key: Key('${log.title}_${DateTime.now().millisecondsSinceEpoch}'),
+                      direction: DismissDirection.endToStart,
                       background: Container(
                         color: Colors.red,
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
                         child: const Icon(Icons.delete, color: Colors.white, size: 30),
                       ),
-                      
-                      
                       confirmDismiss: (direction) async {
                         return await _confirmDelete();
                       },
-                      
-                    
-                      onDismissed: (direction) {
-                        setState(() => _controller.removeLog(index));
+                      onDismissed: (direction) async {
+                        await _controller.removeLog(index);
+                        if (mounted) {
+                          setState(() {
+                            _logsFuture = _fetchLogs();
+                          });
+                        }
                       },
-                      
                       child: Card(
                         color: log.getCategoryColor(),
                         elevation: 2,
                         child: ListTile(
-                          leading: const Icon(Icons.note),
+                          leading: const Icon(Icons.cloud_done, color: Colors.green),
                           title: Text(log.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          
-                        
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 4.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  log.category,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold, 
-                                    fontStyle: FontStyle.italic, 
-                                    color: Colors.blueGrey,      
-                                  ),
-                                ),
-                                const SizedBox(height: 4), 
-                                Text(log.description),
-                              ],
-                            ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(log.category, style: const TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic, color: Colors.blueGrey)),
+                              const SizedBox(height: 4),
+                              Text(log.description),
+                            ],
                           ),
-                        
-
                           isThreeLine: true,
-                          trailing: Wrap(
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
                                 icon: const Icon(Icons.edit, color: Colors.blue),
                                 onPressed: () => _showEditLogDialog(index, log),
                               ),
-                              
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () async {
-                                  
                                   final confirm = await _confirmDelete();
                                   if (confirm == true) {
-                                    setState(() => _controller.removeLog(index));
+                                    await _controller.removeLog(index);
+                                    if (mounted) {
+                                      setState(() {
+                                        _logsFuture = _fetchLogs();
+                                      });
+                                    }
                                   }
                                 },
                               ),
@@ -361,21 +480,19 @@ class _LogViewState extends State<LogView> {
                       ),
                     );
                   },
-                );
-
-              },
-            ),
+                ),
+              );
+            },
           ),
-        ],
-      ),
-    
-      floatingActionButton: FloatingActionButton(
-          onPressed: _showAddLogDialog,
-          child: const Icon(Icons.add),
-      ),
-    );
-
-  }
+        ),
+      ],
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _showAddLogDialog,
+      child: const Icon(Icons.add),
+    ),
+  );
+}
 
   @override
   void dispose() {
