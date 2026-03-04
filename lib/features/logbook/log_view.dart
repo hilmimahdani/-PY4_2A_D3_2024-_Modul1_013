@@ -4,7 +4,7 @@ import 'package:logbook_app_001/features/logbook/models/log_model.dart';
 import 'package:logbook_app_001/features/onboarding/onboarding_view.dart'; 
 import 'package:logbook_app_001/services/mongo_services.dart';
 import 'package:logbook_app_001/helpers/log_helper.dart';
-
+import 'package:intl/intl.dart'; 
 
 class LogView extends StatefulWidget {
   final String? username; 
@@ -20,6 +20,7 @@ class _LogViewState extends State<LogView> {
   final List<String> _categories = ["Umum", "Pekerjaan", "Urgent", "Pribadi"];
   
   bool _isLoading = false;
+  bool _isOffline = false;
 
   late LogController _controller;
 
@@ -85,9 +86,7 @@ class _LogViewState extends State<LogView> {
         level: 1,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Masalah: $e"), backgroundColor: Colors.red),
-        );
+        _isOffline = true;
       }
   } finally {
     
@@ -323,7 +322,7 @@ class _LogViewState extends State<LogView> {
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      title: Text("Log Notes - ${widget.username ?? 'User'}"),
+      title: Text("Logbook - ${widget.username ?? 'User'}"),
       backgroundColor: Colors.blue.shade300,
       actions: [
         IconButton(
@@ -334,6 +333,26 @@ Widget build(BuildContext context) {
     ),
     body: Column(
       children: [
+
+        if (_isOffline)
+          Container(
+            color: Colors.orange.shade800,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              children: const [
+                Icon(Icons.wifi_off, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Offline Mode, Tidak ada koneksi internet.",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
@@ -360,10 +379,6 @@ Widget build(BuildContext context) {
                     ],
                   ),
                 );
-              }
-
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
               }
 
               final currentLogs = snapshot.data ?? [];
@@ -450,6 +465,11 @@ Widget build(BuildContext context) {
                               Text(log.category, style: const TextStyle(fontWeight: FontWeight.bold, fontStyle: FontStyle.italic, color: Colors.blueGrey)),
                               const SizedBox(height: 4),
                               Text(log.description),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Dibuat pada: ${DateFormat('dd MMM yyyy, HH:mm').format(log.date)}", 
+                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
                             ],
                           ),
                           isThreeLine: true,
