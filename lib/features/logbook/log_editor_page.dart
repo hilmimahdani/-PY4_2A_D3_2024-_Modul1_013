@@ -188,18 +188,18 @@ class _LogEditorPageState extends State<LogEditorPage> {
                         decoration: const InputDecoration(
                           hintText: """Tulis dengan format Markdown...
 
-                                    # Heading 1
-                                    ## Heading 2  
-                                    ### Heading 3
+# Heading 1
+## Heading 2  
+### Heading 3
 
-                                    **Bold text**
-                                    *Italic text*
+**Bold text**
+*Italic text*
 
-                                    - List item 1
-                                    - List item 2
+- List item 1
+- List item 2
 
-                                    Tekan Enter untuk baris baru
-                                    Gunakan spasi untuk indentasi""",
+Tekan Enter untuk baris baru
+Gunakan spasi untuk indentasi""",
                           border: InputBorder.none,
                         ),
                       ),

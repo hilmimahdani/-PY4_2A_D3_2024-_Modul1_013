@@ -1,4 +1,5 @@
 class AccessPolicy {
+
   static bool canEditOrDelete({
     required String currentUserId,   
     required String logOwnerId,      
