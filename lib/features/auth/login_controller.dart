@@ -5,6 +5,7 @@ class LoginController {
     "admin": "123",
     "hilmi": "hilmi123",
     "anita": "anita321",
+    "mahdani": "12345",
   };
 
   bool login(String username, String password) {
