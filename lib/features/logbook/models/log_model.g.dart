@@ -25,15 +25,15 @@ class LogModelAdapter extends TypeAdapter<LogModel> {
       category: fields[4] as String,
       authorId: fields[6] as String,
       teamId: fields[7] as String,
-      isSynced: (fields[8] as bool?) ?? false,
-      isPublic: (fields[9] as bool?) ?? false,
+      isSynced: fields[8] as bool,
+      isPublic: fields[9] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, LogModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)

@@ -19,8 +19,14 @@ class LogController {
     List<LogModel> get logs => logsNotifier.value;
 
     LogController(this.username){
-      loadFromDisk();
+      
     }
+
+    
+    Future<void> initialize() async {
+      await loadFromDisk();
+    }
+
 
     /// 2. ADD DATA (Instant Local + Background Cloud)
     Future<void> addLog(String title, String desc, String category, bool isPublic) async {
@@ -68,6 +74,45 @@ class LogController {
       }
     }
 
+   
+    Future<void> addLogToCloud(String title, String desc, String category, bool isPublic) async {
+      // Siapkan data baru
+      final newLog = LogModel(
+        id: ObjectId().oid,
+        username: username,
+        title: title,
+        description: desc,
+        category: category,
+        date: DateTime.now(),
+        authorId: username,
+        teamId: 'team_xyz',
+        isSynced: false,
+        isPublic: isPublic,
+      );
+
+      
+      final currentLogs = List<LogModel>.from(logsNotifier.value);
+      currentLogs.add(newLog);
+      logsNotifier.value = currentLogs;
+      _syncFiltered();
+
+      try {
+        // Attempt cloud sync
+        await MongoService().insertLog(newLog);
+        newLog.isSynced = true;
+
+        // Update di memory
+        final updatedLogs = List<LogModel>.from(logsNotifier.value);
+        final index = updatedLogs.indexWhere((log) => log.id == newLog.id);
+        if (index != -1) updatedLogs[index] = newLog;
+        logsNotifier.value = updatedLogs;
+        _syncFiltered();
+      } catch (e) {
+        
+        newLog.isSynced = false;
+        debugPrint("Cloud sync failed: $e");
+      }
+    }
 
     Future<void> syncOfflineData() async {
 

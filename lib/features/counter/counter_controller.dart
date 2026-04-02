@@ -28,7 +28,9 @@ class CounterController {
 
 
   void updateStep(int newStep) {
+    if (newStep > 0) {
     _step = newStep;
+    }
   }
 
   void _addToHistory(String action, String username) {
@@ -52,6 +54,9 @@ class CounterController {
 
   Future<void> decrement(String username) async { 
     _counter -= _step;
+    if (_counter < 0) {
+      _counter = 0;
+    }
     _addToHistory("mengurangi $_step", username);
     await _saveData(username);
   }
